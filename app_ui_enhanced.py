@@ -1,5 +1,5 @@
-# app_ui_enhanced.py - Enhanced Gradio UI with modern styling
-# 替换原版 app_ui.py，提供更美观的界面体验
+# app_ui_enhanced.py - Manus-Style Gradio UI
+# 模仿 Manus 官方界面风格：白色极简 + 左侧任务列表 + 右侧对话区
 # 用法：将此文件复制到 OpenManus-GUI 目录并重命名为 app_ui.py
 
 import gradio as gr
@@ -46,201 +46,433 @@ def get_current_model():
 CURRENT_MODEL = get_current_model()
 
 # ============================================================
-# 自定义 CSS 样式 - 现代化深色主题
+# Manus 风格 CSS - 白色极简主题
 # ============================================================
 CUSTOM_CSS = """
-/* ===== 全局样式 ===== */
+/* ===== 全局重置 ===== */
 .gradio-container {
     max-width: 100% !important;
-    font-family: 'Inter', 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif !important;
+    background: #ffffff !important;
 }
 
-/* ===== 顶部标题区域 ===== */
-.header-banner {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 16px;
-    padding: 20px 30px;
-    margin-bottom: 16px;
-    color: white;
-    text-align: center;
-    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+body, .main, .app {
+    background: #ffffff !important;
 }
 
-.header-banner h1 {
-    margin: 0;
-    font-size: 28px;
+/* 隐藏 Gradio 默认 footer */
+footer { display: none !important; }
+
+/* ===== 顶部导航栏 ===== */
+.top-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 24px;
+    border-bottom: 1px solid #f0f0f0;
+    background: #ffffff;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.top-nav-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.top-nav-logo {
+    font-size: 18px;
     font-weight: 700;
-    letter-spacing: -0.5px;
-    color: white !important;
+    color: #1a1a1a;
+    letter-spacing: -0.3px;
 }
 
-.header-banner p {
-    margin: 6px 0 0 0;
-    font-size: 14px;
-    opacity: 0.85;
-    color: white !important;
+.top-nav-logo span {
+    color: #6366f1;
 }
 
-/* ===== 模型状态徽章 ===== */
-.model-badge {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    border-radius: 20px;
-    padding: 8px 16px;
-    text-align: center;
-    margin-bottom: 12px;
-    box-shadow: 0 2px 10px rgba(245, 87, 108, 0.2);
-}
-
-.model-badge p {
-    margin: 0;
-    font-size: 13px;
-    color: white !important;
-    font-weight: 600;
-}
-
-/* ===== 左侧栏样式 ===== */
-.sidebar-section {
-    background: #f8f9fc;
+.top-nav-model {
+    font-size: 12px;
+    color: #8b8b8b;
+    background: #f5f5f5;
+    padding: 4px 10px;
     border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 12px;
-    border: 1px solid #e8ecf4;
+    font-weight: 500;
 }
 
-.sidebar-section h3, .sidebar-section h2 {
-    color: #4a5568 !important;
-    font-size: 15px !important;
-    font-weight: 600 !important;
-    margin-bottom: 10px !important;
+.top-nav-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-/* ===== 新建对话按钮 ===== */
-.new-chat-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-    color: white !important;
-    border: none !important;
-    border-radius: 10px !important;
-    font-weight: 600 !important;
-    font-size: 14px !important;
-    padding: 10px 20px !important;
-    transition: all 0.3s ease !important;
-    box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3) !important;
+/* ===== 左侧边栏 ===== */
+.sidebar-wrapper {
+    background: #fafafa !important;
+    border-right: 1px solid #f0f0f0;
+    height: calc(100vh - 53px);
+    overflow-y: auto;
+    padding: 0 !important;
 }
 
-.new-chat-btn:hover {
-    transform: translateY(-1px) !important;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4) !important;
+.sidebar-header {
+    padding: 16px 16px 8px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
-/* ===== 会话列表 Radio 样式 ===== */
-.session-radio .wrap {
-    gap: 4px !important;
+.sidebar-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #8b8b8b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.session-radio label {
+/* 新建任务按钮 - Manus 风格 */
+.new-task-btn {
+    background: #ffffff !important;
+    color: #1a1a1a !important;
+    border: 1px solid #e5e5e5 !important;
     border-radius: 8px !important;
-    padding: 8px 12px !important;
-    margin: 2px 0 !important;
-    transition: all 0.2s ease !important;
-    border: 1px solid transparent !important;
+    font-weight: 500 !important;
+    font-size: 14px !important;
+    padding: 10px 16px !important;
+    margin: 12px 16px !important;
+    transition: all 0.15s ease !important;
+    box-shadow: none !important;
+    width: calc(100% - 32px) !important;
 }
 
-.session-radio label:hover {
-    background: #eef2ff !important;
-    border-color: #c7d2fe !important;
+.new-task-btn:hover {
+    background: #f5f5f5 !important;
+    border-color: #d0d0d0 !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
 }
 
-.session-radio label.selected {
-    background: #eef2ff !important;
-    border-color: #818cf8 !important;
+/* 会话列表 */
+.session-list .wrap {
+    gap: 2px !important;
+    padding: 0 8px !important;
+}
+
+.session-list label {
+    border-radius: 8px !important;
+    padding: 10px 12px !important;
+    margin: 1px 0 !important;
+    transition: all 0.15s ease !important;
+    border: none !important;
+    background: transparent !important;
+    font-size: 14px !important;
+    color: #4a4a4a !important;
+    cursor: pointer !important;
+}
+
+.session-list label:hover {
+    background: #f0f0f0 !important;
+}
+
+.session-list label.selected {
+    background: #f0f0f0 !important;
     font-weight: 600 !important;
+    color: #1a1a1a !important;
 }
 
-/* ===== 聊天区域 ===== */
-.chatbot-container {
-    border-radius: 16px !important;
-    border: 1px solid #e8ecf4 !important;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04) !important;
+/* 会话管理区域 */
+.manage-section {
+    padding: 12px 16px;
+    border-top: 1px solid #f0f0f0;
+    margin-top: 8px;
 }
 
-/* 聊天气泡样式 */
+.manage-label {
+    font-size: 12px;
+    color: #8b8b8b;
+    font-weight: 500;
+    margin-bottom: 6px;
+}
+
+.manage-btn {
+    border-radius: 6px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    padding: 6px 12px !important;
+    border: 1px solid #e5e5e5 !important;
+    background: #ffffff !important;
+    color: #4a4a4a !important;
+    transition: all 0.15s ease !important;
+}
+
+.manage-btn:hover {
+    background: #f5f5f5 !important;
+}
+
+.delete-btn {
+    border-color: #fecaca !important;
+    color: #dc2626 !important;
+}
+
+.delete-btn:hover {
+    background: #fef2f2 !important;
+}
+
+/* ===== 右侧主区域 ===== */
+.main-area {
+    background: #ffffff !important;
+    height: calc(100vh - 53px);
+    display: flex;
+    flex-direction: column;
+}
+
+/* 聊天区域 */
+.chat-area {
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    background: #ffffff !important;
+}
+
+.chat-area .wrapper {
+    padding: 0 !important;
+}
+
+/* 聊天气泡 - Manus 风格 */
+.chatbot {
+    background: #ffffff !important;
+}
+
+.chatbot .message-wrap {
+    padding: 8px 24px !important;
+}
+
 .chatbot .message-wrap .message {
-    border-radius: 16px !important;
-    padding: 12px 16px !important;
-    font-size: 14px !important;
-    line-height: 1.6 !important;
-}
-
-.chatbot .message-wrap .message.user {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-    color: white !important;
-    border-bottom-right-radius: 4px !important;
-}
-
-.chatbot .message-wrap .message.bot {
-    background: #f8f9fc !important;
-    color: #2d3748 !important;
-    border: 1px solid #e8ecf4 !important;
-    border-bottom-left-radius: 4px !important;
-}
-
-/* ===== 输入框样式 ===== */
-.input-row textarea {
     border-radius: 12px !important;
-    border: 2px solid #e8ecf4 !important;
-    padding: 12px 16px !important;
+    padding: 14px 18px !important;
     font-size: 14px !important;
-    transition: border-color 0.3s ease !important;
-    min-height: 50px !important;
+    line-height: 1.7 !important;
+    max-width: 85% !important;
 }
 
-.input-row textarea:focus {
-    border-color: #818cf8 !important;
-    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1) !important;
+/* 用户消息 - 浅灰背景 */
+.chatbot .message-wrap .message.user {
+    background: #f5f5f5 !important;
+    color: #1a1a1a !important;
+    border: none !important;
+    border-radius: 16px 16px 4px 16px !important;
 }
 
-/* ===== 发送按钮 ===== */
+/* AI 消息 - 白色背景 */
+.chatbot .message-wrap .message.bot {
+    background: #ffffff !important;
+    color: #1a1a1a !important;
+    border: 1px solid #f0f0f0 !important;
+    border-radius: 16px 16px 16px 4px !important;
+}
+
+/* Agent 思考步骤标签 - 模仿 Manus 的 pill badges */
+.chatbot .message-wrap .message.bot .step-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f5f5f5;
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 13px;
+    color: #4a4a4a;
+    margin: 3px 0;
+}
+
+.chatbot .message-wrap .message.bot .step-badge .step-icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #6366f1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 10px;
+}
+
+/* ===== 底部输入区域 - Manus 风格 ===== */
+.input-area {
+    padding: 16px 24px 20px 24px;
+    background: #ffffff;
+    border-top: 1px solid #f0f0f0;
+}
+
+.input-area textarea {
+    border-radius: 12px !important;
+    border: 1px solid #e5e5e5 !important;
+    padding: 14px 18px !important;
+    font-size: 14px !important;
+    background: #fafafa !important;
+    transition: all 0.15s ease !important;
+    min-height: 48px !important;
+    resize: none !important;
+    color: #1a1a1a !important;
+}
+
+.input-area textarea:focus {
+    border-color: #6366f1 !important;
+    background: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.08) !important;
+}
+
+.input-area textarea::placeholder {
+    color: #b0b0b0 !important;
+}
+
+/* 发送按钮 - Manus 风格圆形 */
 .send-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    background: #1a1a1a !important;
     color: white !important;
     border: none !important;
     border-radius: 12px !important;
-    font-weight: 600 !important;
-    font-size: 15px !important;
-    min-height: 50px !important;
-    transition: all 0.3s ease !important;
-    box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3) !important;
+    font-weight: 500 !important;
+    font-size: 14px !important;
+    min-height: 48px !important;
+    min-width: 48px !important;
+    transition: all 0.15s ease !important;
+    box-shadow: none !important;
 }
 
 .send-btn:hover {
-    transform: translateY(-1px) !important;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4) !important;
+    background: #333333 !important;
 }
 
-/* ===== 管理按钮 ===== */
-.manage-btn {
-    border-radius: 8px !important;
-    font-size: 13px !important;
+/* 停止按钮 */
+.stop-btn {
+    background: #ffffff !important;
+    color: #dc2626 !important;
+    border: 1px solid #fecaca !important;
+    border-radius: 12px !important;
     font-weight: 500 !important;
+    font-size: 14px !important;
+    min-height: 48px !important;
+    transition: all 0.15s ease !important;
 }
 
-/* ===== 底部状态栏 ===== */
-.footer-bar {
+.stop-btn:hover {
+    background: #fef2f2 !important;
+}
+
+/* ===== 空白状态提示 - Manus 风格 ===== */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 40px;
+    color: #b0b0b0;
+}
+
+.empty-state-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin-bottom: 16px;
+}
+
+.empty-state-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 8px;
+}
+
+.empty-state-desc {
+    font-size: 14px;
+    color: #8b8b8b;
     text-align: center;
-    padding: 12px;
-    color: #a0aec0;
-    font-size: 12px;
-    border-top: 1px solid #e8ecf4;
-    margin-top: 16px;
+    line-height: 1.5;
 }
 
-.footer-bar p {
-    margin: 0;
+.empty-state-examples {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 20px;
+    justify-content: center;
 }
 
-/* ===== 滚动条美化 ===== */
-::-webkit-scrollbar {
+.example-chip {
+    background: #f5f5f5;
+    border: 1px solid #e5e5e5;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 13px;
+    color: #4a4a4a;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.example-chip:hover {
+    background: #eeeeee;
+    border-color: #d0d0d0;
+}
+
+/* ===== 进度指示器 ===== */
+.thinking-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #6366f1;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.thinking-dot {
     width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #6366f1;
+    animation: thinking-pulse 1.4s infinite ease-in-out;
+}
+
+.thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes thinking-pulse {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+}
+
+/* ===== 代码块 ===== */
+.chatbot pre {
+    background: #1e1e2e !important;
+    border-radius: 8px !important;
+    padding: 14px !important;
+    overflow-x: auto;
+    margin: 8px 0 !important;
+}
+
+.chatbot code {
+    font-family: 'SF Mono', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace !important;
+    font-size: 13px !important;
+}
+
+.chatbot p code {
+    background: #f5f5f5 !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+    font-size: 13px !important;
+    color: #e11d48 !important;
+}
+
+/* ===== 滚动条 - 极简 ===== */
+::-webkit-scrollbar {
+    width: 4px;
 }
 
 ::-webkit-scrollbar-track {
@@ -248,35 +480,34 @@ CUSTOM_CSS = """
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #cbd5e0;
-    border-radius: 3px;
+    background: #d0d0d0;
+    border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #a0aec0;
+    background: #b0b0b0;
 }
 
-/* ===== 代码块样式 ===== */
-.chatbot pre {
-    background: #1a1b26 !important;
-    border-radius: 10px !important;
-    padding: 14px !important;
-    overflow-x: auto;
+/* ===== 任务完成标记 ===== */
+.task-complete {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f0fdf4;
+    color: #16a34a;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-top: 12px;
+    border: 1px solid #dcfce7;
 }
 
-.chatbot code {
-    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace !important;
-    font-size: 13px !important;
-}
-
-/* ===== 响应式调整 ===== */
+/* ===== 响应式 ===== */
 @media (max-width: 768px) {
-    .header-banner h1 {
-        font-size: 22px;
-    }
-    .header-banner p {
-        font-size: 12px;
-    }
+    .top-nav { padding: 10px 16px; }
+    .chatbot .message-wrap { padding: 8px 16px !important; }
+    .input-area { padding: 12px 16px 16px 16px; }
 }
 """
 
@@ -353,107 +584,80 @@ def load_session_data() -> Dict[str, List[AgentMessage]]:
                         messages = []
                     else:
                         messages_data = json.loads(messages_data_str)
-                        messages = [AgentMessage.model_validate(msg_data) for msg_data in messages_data]
-                    sessions[session_id_from_filename] = messages
-                logger.debug(f"Loaded session '{session_id_from_filename}' from {filepath}")
+                        messages = [AgentMessage.model_validate(msg_data) 
+                                    for msg_data in messages_data]
+                display_name = session_id_from_filename.replace("_", " ")
+                sessions[display_name] = messages
             except Exception as e:
                 logger.error(f"Error loading session file {filepath}: {e}", exc_info=True)
     except Exception as e:
-        logger.error(f"Error reading history directory '{HISTORY_DIR}': {e}", exc_info=True)
-    if not sessions:
-        logger.info("No chat history found. Starting with 'Chat 1'.")
-        default_session_id = "Chat 1"
-        sessions[default_session_id] = []
-        save_session_file(default_session_id, [])
-    logger.info(f"Loaded {len(sessions)} sessions.")
+        logger.error(f"Error scanning session directory: {e}", exc_info=True)
     return sessions
 
 
 def delete_session_file(session_id: str):
+    filename = sanitize_filename(session_id) + ".json"
+    filepath = HISTORY_DIR / filename
     try:
-        filename = sanitize_filename(session_id) + ".json"
-        filepath = HISTORY_DIR / filename
         if filepath.exists():
             filepath.unlink()
             logger.info(f"Deleted session file: {filepath}")
-        else:
-            logger.warning(f"Attempted to delete non-existent session file: {filepath}")
     except Exception as e:
-        logger.error(f"Error deleting session file for '{session_id}': {e}", exc_info=True)
-        gr.Error(f"Failed to delete session file for '{session_id}': {e}")
+        logger.error(f"Error deleting session file {filepath}: {e}", exc_info=True)
 
 
-def rename_session_file(old_session_id: str, new_session_id: str):
+def rename_session_file(old_name: str, new_name: str):
+    old_filename = sanitize_filename(old_name) + ".json"
+    new_filename = sanitize_filename(new_name) + ".json"
+    old_filepath = HISTORY_DIR / old_filename
+    new_filepath = HISTORY_DIR / new_filename
     try:
-        old_filename = sanitize_filename(old_session_id) + ".json"
-        new_filename = sanitize_filename(new_session_id) + ".json"
-        old_filepath = HISTORY_DIR / old_filename
-        new_filepath = HISTORY_DIR / new_filename
         if old_filepath.exists():
-            if not new_filepath.exists():
-                old_filepath.rename(new_filepath)
-                logger.info(f"Renamed session file from {old_filename} to {new_filename}")
-            else:
-                logger.error(f"Rename failed: Target file '{new_filename}' already exists.")
-                gr.Error(f"Rename failed: File for '{new_session_id}' already exists.")
-        else:
-            logger.warning(f"Attempted to rename non-existent session file: {old_filepath}")
-            gr.Warning(f"Could not find file for '{old_session_id}' to rename.")
+            old_filepath.rename(new_filepath)
+            logger.info(f"Renamed session file: {old_filepath} -> {new_filepath}")
     except Exception as e:
         logger.error(f"Error renaming session file: {e}", exc_info=True)
-        gr.Error(f"Failed to rename session file: {e}")
 
 
-# --- UI Helper Function ---
-def format_history_for_chatbot(messages: list[AgentMessage]) -> list[list[str | None]]:
-    chatbot_history = []
-    user_msg_content = None
-    assistant_msg_parts = []
+# --- Format History for Chatbot ---
+def format_history_for_chatbot(messages: List[AgentMessage]) -> list:
+    """Format AgentMessage list into Gradio chatbot format [[user, bot], ...]"""
+    chat_pairs = []
+    current_user_msg = None
+    bot_parts = []
 
     for msg in messages:
-        if msg.role == "user":
-            if assistant_msg_parts:
-                if user_msg_content is not None:
-                    chatbot_history.append([user_msg_content, "\n\n".join(assistant_msg_parts)])
-                else:
-                    chatbot_history.append([None, "\n\n".join(assistant_msg_parts)])
-                assistant_msg_parts = []
-            user_msg_content = msg.content
-        elif msg.role == "assistant":
-            thought_prefix = "💭 **思考过程：**\n" if msg.content else ""
-            tool_calls_str = ""
-            if msg.tool_calls:
-                tool_calls_str = "\n🔧 **调用工具：**\n" + "\n".join(
-                    [f"- `{tc.function.name}`(`{tc.function.arguments or '{}'}`)" for tc in msg.tool_calls]
-                )
-            assistant_msg_parts.append(f"{thought_prefix}{msg.content or ''}{tool_calls_str}")
-        elif msg.role == "tool":
-            tool_content = str(msg.content)
-            is_code = "```" in tool_content
-            formatted_content = tool_content if is_code else f"```\n{tool_content}\n```"
-            if len(tool_content) > 500 and "..." not in tool_content[-10:]:
-                formatted_content = formatted_content[:500] + "..."
-            assistant_msg_parts.append(f"📋 **工具结果 (`{msg.name}`)：**\n{formatted_content}")
-        elif msg.role == "system":
-            assistant_msg_parts.append(f"⚙️ **系统提示：**\n{msg.content}")
+        role = msg.role
+        content = msg.content or ""
 
-    if user_msg_content is not None:
-        chatbot_history.append([
-            user_msg_content,
-            "\n\n".join(assistant_msg_parts) if assistant_msg_parts else None
-        ])
-    elif assistant_msg_parts:
-        chatbot_history.append([None, "\n\n".join(assistant_msg_parts)])
+        if role == "user":
+            if current_user_msg is not None:
+                bot_response = "\n\n".join(bot_parts) if bot_parts else None
+                chat_pairs.append([current_user_msg, bot_response])
+                bot_parts = []
+            current_user_msg = content
+        elif role == "assistant":
+            if content:
+                bot_parts.append(content)
+        elif role == "tool":
+            tool_name = getattr(msg, 'name', 'tool')
+            if content:
+                short_content = content[:200] + "..." if len(content) > 200 else content
+                bot_parts.append(f"`{tool_name}` 执行完成")
 
-    return chatbot_history
+    if current_user_msg is not None:
+        bot_response = "\n\n".join(bot_parts) if bot_parts else None
+        chat_pairs.append([current_user_msg, bot_response])
+
+    return chat_pairs
 
 
-# --- Gradio Session Management Functions ---
+# --- Session Management UI Functions ---
 def start_new_chat_session_ui(session_data: dict):
     existing_nums = []
-    for sid in session_data.keys():
-        if sid.startswith("Chat ") and len(sid.split(" ")) > 1 and sid.split(" ")[1].isdigit():
-            existing_nums.append(int(sid.split(" ")[1]))
+    for key in session_data.keys():
+        if key.startswith("Chat ") and key.split(" ")[-1].isdigit():
+            existing_nums.append(int(key.split(" ")[-1]))
     next_num = max(existing_nums, default=0) + 1
     new_session_id = f"Chat {next_num}"
     session_data[new_session_id] = []
@@ -462,53 +666,51 @@ def start_new_chat_session_ui(session_data: dict):
     updated_choices.sort(
         key=lambda x: int(x.split(" ")[1]) if x.startswith("Chat ") and len(x.split(" ")) > 1 and x.split(" ")[1].isdigit() else float('inf')
     )
-    logger.info(f"Created new chat session: {new_session_id}")
+    logger.info(f"Created new session: {new_session_id}")
     return new_session_id, session_data, [], gr.Radio(choices=updated_choices, value=new_session_id)
 
 
 def load_chat_session_ui(selected_session_id: str, session_data: dict):
-    if selected_session_id and selected_session_id in session_data:
-        messages = session_data[selected_session_id]
-        chatbot_history = format_history_for_chatbot(messages)
-        logger.info(f"Loaded session: {selected_session_id} with {len(messages)} messages")
-        return chatbot_history, selected_session_id, gr.Radio(value=selected_session_id)
-    return [], selected_session_id, gr.Radio(value=selected_session_id)
+    if not selected_session_id or selected_session_id not in session_data:
+        return [], selected_session_id, gr.Radio()
+    messages = session_data[selected_session_id]
+    chat_history = format_history_for_chatbot(messages)
+    return chat_history, selected_session_id, gr.Radio()
 
 
 def delete_chat_session_ui(session_id: str, session_data: dict):
-    if not session_id or session_id not in session_data:
-        gr.Warning(f"Session '{session_id}' not found!")
-        return session_id, session_data, gr.Radio(choices=list(session_data.keys()), value=session_id), []
-
-    delete_session_file(session_id)
-    del session_data[session_id]
-
-    if not session_data:
-        session_data["Chat 1"] = []
-        save_session_file("Chat 1", [])
-
+    if session_id in session_data:
+        delete_session_file(session_id)
+        del session_data[session_id]
+        logger.info(f"Deleted session: {session_id}")
     updated_choices = list(session_data.keys())
     updated_choices.sort(
         key=lambda x: int(x.split(" ")[1]) if x.startswith("Chat ") and len(x.split(" ")) > 1 and x.split(" ")[1].isdigit() else float('inf')
     )
-    new_active = updated_choices[-1] if updated_choices else "Chat 1"
-    new_history = format_history_for_chatbot(session_data.get(new_active, []))
-    logger.info(f"Deleted session: {session_id}, switched to: {new_active}")
+    if updated_choices:
+        new_active = updated_choices[-1]
+        new_history = format_history_for_chatbot(session_data.get(new_active, []))
+    else:
+        new_active = "Chat 1"
+        session_data[new_active] = []
+        save_session_file(new_active, [])
+        updated_choices = [new_active]
+        new_history = []
     return new_active, session_data, gr.Radio(choices=updated_choices, value=new_active), new_history
 
 
 def rename_chat_session_ui(session_id: str, new_name: str, session_data: dict):
     if not session_id or session_id not in session_data:
-        gr.Warning(f"Session '{session_id}' not found!")
+        gr.Warning(f"会话 '{session_id}' 不存在！")
         return session_id, session_data, gr.Radio(choices=list(session_data.keys()), value=session_id), gr.Textbox(value="")
     if not new_name or not new_name.strip():
-        gr.Warning("New name cannot be empty!")
+        gr.Warning("新名称不能为空！")
         return session_id, session_data, gr.Radio(choices=list(session_data.keys()), value=session_id), gr.Textbox(value="")
     new_name = new_name.strip()
     if new_name == session_id:
         return session_id, session_data, gr.Radio(choices=list(session_data.keys()), value=session_id), gr.Textbox(value="")
     if new_name in session_data:
-        gr.Warning(f"Name '{new_name}' already exists!")
+        gr.Warning(f"名称 '{new_name}' 已存在！")
         return session_id, session_data, gr.Radio(choices=list(session_data.keys()), value=session_id), gr.Textbox(value="")
 
     rename_session_file(session_id, new_name)
@@ -534,7 +736,7 @@ async def run_chat_ui(user_message: str, chat_history: list, active_session_id: 
 
     agent = ui_agent_instance
     if not agent:
-        chat_history[-1][1] = "❌ **错误：** Agent 未初始化，请重启服务。"
+        chat_history[-1][1] = "**错误：** Agent 未初始化，请重启服务。"
         yield chat_history, session_data
         return
 
@@ -550,7 +752,7 @@ async def run_chat_ui(user_message: str, chat_history: list, active_session_id: 
             agent.current_step = 0
 
             # Show thinking indicator
-            chat_history[-1][1] = "🤔 **正在思考中...**"
+            chat_history[-1][1] = "正在思考中..."
             yield chat_history, session_data
 
             # Run the agent
@@ -563,15 +765,15 @@ async def run_chat_ui(user_message: str, chat_history: list, active_session_id: 
 
             chat_history_formatted = format_history_for_chatbot(session_data.get(active_session_id, []))
 
-            # Add success indicator
+            # Add completion marker
             if chat_history_formatted and chat_history_formatted[-1][1]:
-                chat_history_formatted[-1][1] += "\n\n✅ **任务完成**"
+                chat_history_formatted[-1][1] += "\n\n---\n任务完成"
 
             yield chat_history_formatted, session_data
 
     except Exception as e:
         logger.error(f"UI: Error during agent run: {e}", exc_info=True)
-        error_msg = f"❌ **发生错误：** {str(e)}"
+        error_msg = f"**发生错误：** {str(e)}"
         if chat_history:
             chat_history[-1][1] = error_msg
         if agent:
@@ -595,106 +797,110 @@ active_session_id_on_load = initial_session_ids[-1] if initial_session_ids else 
 
 with gr.Blocks(
     css=CUSTOM_CSS,
-    theme=gr.themes.Soft(
+    theme=gr.themes.Base(
         primary_hue=gr.themes.colors.indigo,
-        secondary_hue=gr.themes.colors.purple,
-        neutral_hue=gr.themes.colors.slate,
+        secondary_hue=gr.themes.colors.slate,
+        neutral_hue=gr.themes.colors.gray,
         font=gr.themes.GoogleFont("Inter"),
+        font_mono=gr.themes.GoogleFont("JetBrains Mono"),
     ),
-    title="OpenManus Agent"
+    title="OpenManus"
 ) as demo:
     session_state = gr.State(initial_session_data)
     active_session_id_state = gr.State(active_session_id_on_load)
 
-    # ===== 顶部标题栏 =====
+    # ===== 顶部导航栏 =====
     gr.HTML(f"""
-        <div class="header-banner">
-            <h1>🤖 OpenManus Agent</h1>
-            <p>本地 AI 智能助手 · 支持上网搜索 · 代码编写 · 文件操作 · 数据分析</p>
+        <div class="top-nav">
+            <div class="top-nav-left">
+                <div class="top-nav-logo"><span>Open</span>Manus</div>
+                <div class="top-nav-model">{CURRENT_MODEL}</div>
+            </div>
+            <div class="top-nav-right">
+                <div style="font-size:13px;color:#8b8b8b;">本地 AI Agent</div>
+            </div>
         </div>
     """)
 
-    with gr.Row():
-        # ===== 左侧栏 =====
-        with gr.Column(scale=1, min_width=280):
-            # 模型状态
-            gr.HTML(f"""
-                <div class="model-badge">
-                    <p>🧠 当前模型：{CURRENT_MODEL}</p>
-                </div>
-            """)
-
-            # 新建对话按钮
+    with gr.Row(equal_height=True):
+        # ===== 左侧边栏 =====
+        with gr.Column(scale=1, min_width=240, elem_classes=["sidebar-wrapper"]):
+            # 新建任务按钮
             new_chat_btn = gr.Button(
-                "✨ 新建对话",
-                elem_classes=["new-chat-btn"],
-                size="lg"
+                "＋  新建任务",
+                elem_classes=["new-task-btn"],
+                size="sm"
             )
 
+            # 任务列表标题
+            gr.HTML('<div class="sidebar-header"><div class="sidebar-title">所有任务</div></div>')
+
             # 会话列表
-            gr.HTML("<div class='sidebar-section'><h3>📂 对话历史</h3></div>")
             history_radio = gr.Radio(
                 label="",
                 choices=initial_session_ids,
                 value=active_session_id_on_load,
                 type="value",
-                elem_classes=["session-radio"],
+                elem_classes=["session-list"],
                 show_label=False
             )
 
             # 会话管理
-            gr.HTML("<div class='sidebar-section'><h3>⚙️ 管理会话</h3></div>")
+            gr.HTML('<div class="manage-section"><div class="manage-label">管理</div></div>')
             rename_textbox = gr.Textbox(
-                placeholder="输入新名称...",
+                placeholder="输入新名称",
                 show_label=False,
-                container=False
+                container=False,
+                scale=1
             )
             with gr.Row():
-                rename_btn = gr.Button("✏️ 重命名", scale=1, elem_classes=["manage-btn"])
-                delete_btn = gr.Button("🗑️ 删除", scale=1, variant="stop", elem_classes=["manage-btn"])
+                rename_btn = gr.Button("重命名", scale=1, elem_classes=["manage-btn"], size="sm")
+                delete_btn = gr.Button("删除", scale=1, elem_classes=["manage-btn", "delete-btn"], size="sm")
 
-        # ===== 右侧聊天区域 =====
-        with gr.Column(scale=4):
+        # ===== 右侧主区域 =====
+        with gr.Column(scale=4, elem_classes=["main-area"]):
             initial_chatbot_history = format_history_for_chatbot(
                 initial_session_data.get(active_session_id_on_load, [])
             )
             chatbot = gr.Chatbot(
                 value=initial_chatbot_history,
                 render_markdown=True,
-                height=620,
+                height=580,
                 show_label=False,
                 bubble_full_width=False,
-                elem_classes=["chatbot-container"],
-                placeholder="<div style='text-align:center;color:#a0aec0;padding:40px;'>"
-                           "<p style='font-size:48px;margin-bottom:16px;'>🤖</p>"
-                           "<p style='font-size:18px;font-weight:600;'>有什么我可以帮您的？</p>"
-                           "<p style='font-size:14px;margin-top:8px;'>试试输入：帮我写一个 Python 爬虫 / 帮我搜索最新的 AI 新闻</p>"
-                           "</div>"
+                elem_classes=["chat-area"],
+                placeholder="""<div class="empty-state">
+                    <div class="empty-state-icon">✦</div>
+                    <div class="empty-state-title">有什么可以帮您的？</div>
+                    <div class="empty-state-desc">
+                        我可以帮您搜索信息、编写代码、分析数据、撰写文档等
+                    </div>
+                    <div class="empty-state-examples">
+                        <div class="example-chip">帮我搜索最新的 AI 新闻</div>
+                        <div class="example-chip">写一个 Python 爬虫</div>
+                        <div class="example-chip">分析这份数据</div>
+                        <div class="example-chip">帮我写一份报告</div>
+                    </div>
+                </div>"""
             )
 
-            with gr.Row(elem_classes=["input-row"]):
+            # 底部输入区域
+            with gr.Row(elem_classes=["input-area"]):
                 msg_textbox = gr.Textbox(
-                    placeholder="输入您的任务或问题... (按 Enter 发送)",
-                    scale=7,
+                    placeholder="描述您的任务...",
+                    scale=8,
                     container=False,
                     show_label=False,
                     lines=1,
                     max_lines=5
                 )
                 send_btn = gr.Button(
-                    "发送 ➤",
+                    "↑",
                     scale=1,
                     variant="primary",
-                    min_width=100,
+                    min_width=48,
                     elem_classes=["send-btn"]
                 )
-
-    # ===== 底部状态栏 =====
-    gr.HTML(f"""
-        <div class="footer-bar">
-            <p>OpenManus Agent · 当前模型: {CURRENT_MODEL} · 对话历史自动保存</p>
-        </div>
-    """)
 
     # --- Define Gradio Interactions ---
     submit_event = msg_textbox.submit(
@@ -759,5 +965,5 @@ if __name__ == "__main__":
 
     threading.Timer(1.5, open_browser).start()
 
-    logger.info(f"Starting Enhanced Gradio UI server on {UI_BASE_URL}")
+    logger.info(f"Starting OpenManus UI server on {UI_BASE_URL}")
     demo.launch(server_name=UI_HOST, server_port=UI_PORT)

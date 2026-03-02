@@ -1,5 +1,7 @@
 // OpenManus-GUI api_server.py 兼容的 OpenAI 格式 API 客户端
-// 支持通过 Vite 代理（开发环境）或直连后端（生产环境）
+// 后端只提供 POST /v1/chat/completions 一个端点
+// 健康检查使用 /openapi.json（FastAPI 自动生成）
+// 模型列表为前端静态配置
 
 const SETTINGS_KEY = "openmanus_settings";
 
@@ -120,11 +122,11 @@ export async function sendChatMessageSync(
   return data.choices?.[0]?.message?.content || "";
 }
 
-// 健康检查
+// 健康检查 - 使用 /openapi.json（FastAPI 自动提供）
 export async function checkApiHealth(): Promise<boolean> {
   try {
     const apiBase = getApiBase();
-    const response = await fetch(`${apiBase}/v1/models`, {
+    const response = await fetch(`${apiBase}/openapi.json`, {
       method: "GET",
       signal: AbortSignal.timeout(3000),
     });

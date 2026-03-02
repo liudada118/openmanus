@@ -2,6 +2,7 @@
 """
 OpenManus 模型切换工具
 快速在不同 LLM 模型之间切换，无需手动编辑配置文件。
+支持 OpenManus-GUI / OpenManusWeb / OpenManus 终端版。
 """
 
 import os
@@ -73,13 +74,19 @@ MODELS = {
 
 
 def find_config() -> Path:
-    """查找配置文件路径"""
+    """查找配置文件路径，支持多种安装方式"""
     candidates = [
+        # 当前目录（最优先）
         Path(__file__).parent / "config" / "config.toml",
         Path.cwd() / "config" / "config.toml",
-        Path.home() / "OpenManus" / "config" / "config.toml",
-        Path("E:/OpenManus") / "config" / "config.toml",
+        # Windows E 盘安装路径
+        Path("E:/OpenManus/OpenManus-GUI") / "config" / "config.toml",
         Path("E:/OpenManus/OpenManusWeb") / "config" / "config.toml",
+        Path("E:/OpenManus") / "config" / "config.toml",
+        # 用户主目录安装路径
+        Path.home() / "OpenManus-GUI" / "config" / "config.toml",
+        Path.home() / "OpenManusWeb" / "config" / "config.toml",
+        Path.home() / "OpenManus" / "config" / "config.toml",
     ]
     for p in candidates:
         if p.exists():
@@ -173,6 +180,11 @@ engine = "Google"
         f'# 当前模型: {model_info["name"]}',
         content,
     )
+    content = re.sub(
+        r"# Current Model:.*",
+        f'# 当前模型: {model_info["name"]}',
+        content,
+    )
 
     config_path.write_text(content, encoding="utf-8")
 
@@ -191,7 +203,22 @@ def main():
     print("  可选模型:")
     print("-" * 60)
 
-    for key, info in MODELS.items():
+    # 分组显示
+    print()
+    print("  === 云端模型 (需要 API Key，按量付费) ===")
+    print()
+    for key in ["1", "2", "3", "4", "5"]:
+        info = MODELS[key]
+        marker = " ◀ 当前" if info["model"] == current else ""
+        print(f"  {key}) {info['name']}{marker}")
+        print(f"     费用: {info['cost']}")
+        print(f"     说明: {info['desc']}")
+        print()
+
+    print("  === 本地模型 (完全免费，需 Ollama + GPU) ===")
+    print()
+    for key in ["6", "7", "8"]:
+        info = MODELS[key]
         marker = " ◀ 当前" if info["model"] == current else ""
         print(f"  {key}) {info['name']}{marker}")
         print(f"     费用: {info['cost']}")
@@ -199,7 +226,7 @@ def main():
         print()
 
     print("-" * 60)
-    print("  0) 自定义模型")
+    print("  0) 自定义模型（填写任意模型名和 API 地址）")
     print("  q) 退出")
     print("-" * 60)
 
@@ -227,6 +254,7 @@ def main():
         }
         update_config(config_path, model_info, api_key or None)
         print(f"\n✅ 已切换到自定义模型: {model_name}")
+        print(f"\n重启 Agent 后生效（重新运行 启动WebUI.bat 或 启动终端模式.bat）")
         return
 
     if choice not in MODELS:
@@ -249,7 +277,7 @@ def main():
     update_config(config_path, model_info)
     print(f"\n✅ 已切换到: {model_info['name']}")
     print(f"   费用: {model_info['cost']}")
-    print(f"\n现在可以运行 python main.py 启动 Agent 了！")
+    print(f"\n重启 Agent 后生效（重新运行 启动WebUI.bat 或 启动终端模式.bat）")
 
 
 if __name__ == "__main__":

@@ -124,14 +124,22 @@ cd E:\openmanus
 git clone https://github.com/Hank-Chromela/OpenManus-GUI.git
 ```
 
-### 4.2 安装 Python 依赖
+### 4.2 创建虚拟环境并安装 Python 依赖
 
 ```powershell
 cd E:\openmanus\OpenManus-GUI
+
+# 创建虚拟环境（如果还没有的话）
+python -m venv .venv
+
+# 激活虚拟环境
+.venv\Scripts\Activate.ps1
+
+# 安装依赖
 pip install -r requirements.txt
 ```
 
-> **提示**：不需要创建虚拟环境，直接使用系统 Python 安装即可。如果安装速度慢，可以使用国内镜像：
+> **提示**：每次打开新终端都需要先激活虚拟环境（`.venv\Scripts\Activate.ps1`），或者使用 `启动全部.bat` 一键启动会自动激活。如果安装速度慢，可以使用国内镜像：
 > ```powershell
 > pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 > ```
@@ -208,9 +216,10 @@ pnpm config set registry https://registry.npmmirror.com
 
 脚本会自动：
 1. 检测项目安装目录
-2. 启动后端 API 服务（端口 8002）
-3. 启动前端开发服务器（端口 3000）
-4. 打开浏览器访问 `http://localhost:3000`
+2. 自动检测并激活 `.venv` 或 `venv` 虚拟环境
+3. 启动后端 API 服务（端口 8002）
+4. 启动前端开发服务器（端口 3000）
+5. 打开浏览器访问 `http://localhost:3000`
 
 ### 方式 B：手动启动
 
@@ -220,6 +229,7 @@ pnpm config set registry https://registry.npmmirror.com
 
 ```powershell
 cd E:\openmanus\OpenManus-GUI
+.venv\Scripts\Activate.ps1
 python api_server.py
 ```
 
@@ -283,7 +293,7 @@ pnpm dev
 
 ```powershell
 # 终端 1（后端）
-cd E:\openmanus\OpenManus-GUI && python api_server.py
+cd E:\openmanus\OpenManus-GUI && .venv\Scripts\Activate.ps1 && python api_server.py
 
 # 终端 2（前端）
 cd E:\openmanus\web-ui && pnpm dev

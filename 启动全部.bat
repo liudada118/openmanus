@@ -37,11 +37,24 @@ echo [INFO] Backend: %BACKEND_DIR%
 echo [INFO] Frontend: %FRONTEND_DIR%
 echo.
 
+REM === 检测虚拟环境 ===
+set "VENV_CMD="
+if exist "%BACKEND_DIR%\.venv\Scripts\activate.bat" (
+    set "VENV_CMD=call %BACKEND_DIR%\.venv\Scripts\activate.bat && "
+    echo [INFO] Found .venv virtual environment
+) else if exist "%BACKEND_DIR%\venv\Scripts\activate.bat" (
+    set "VENV_CMD=call %BACKEND_DIR%\venv\Scripts\activate.bat && "
+    echo [INFO] Found venv virtual environment
+) else (
+    echo [WARN] No virtual environment found, using system Python
+)
+
+echo.
 echo [1/2] Starting backend API server...
-start "OpenManus-Backend" cmd /k "cd /d %BACKEND_DIR% && python api_server.py"
+start "OpenManus-Backend" cmd /k "cd /d %BACKEND_DIR% && %VENV_CMD%python api_server.py"
 
 echo Waiting for backend to start...
-timeout /t 5 /nobreak >nul
+timeout /t 6 /nobreak >nul
 
 echo [2/2] Starting frontend...
 start "OpenManus-Frontend" cmd /k "cd /d %FRONTEND_DIR% && pnpm dev"
@@ -59,5 +72,5 @@ echo.
 echo Tips:
 echo   - Close this window will not affect running services
 echo   - To stop: close "OpenManus-Backend" and "OpenManus-Frontend" windows
-echo   - Or double-click "stop_all.bat"
+echo   - Or double-click the stop script
 pause

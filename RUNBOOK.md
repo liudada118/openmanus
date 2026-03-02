@@ -36,13 +36,13 @@
 │  ┌────────────────────────────────────────────────────┐  │
 │  │           React 前端界面 (web-ui)                    │  │
 │  │  · 任务列表 · 对话界面 · 模型选择 · 状态监控         │  │
-│  │  · Vite 代理: /api → localhost:8002                  │  │
+│  │  · Vite 代理: /api → localhost:8000                  │  │
 │  └──────────────────────┬─────────────────────────────┘  │
 │                         │ HTTP API (通过 Vite 代理)        │
 │                         ▼                                 │
 │  ┌────────────────────────────────────────────────────┐  │
 │  │      OpenManus-GUI 后端 (api_server.py)             │  │
-│  │            http://localhost:8002                     │  │
+│  │            http://localhost:8000                     │  │
 │  │  · Agent 引擎 · 工具调用 · 浏览器自动化 · 代码执行  │  │
 │  └──────────────────────┬─────────────────────────────┘  │
 │                         │                                 │
@@ -54,9 +54,9 @@
 | 服务 | 端口 | 作用 | 技术栈 |
 |---|---|---|---|
 | **React 前端** | 3000 | 用户界面（对话、任务管理、模型选择） | React 19 + TailwindCSS 4 + shadcn/ui |
-| **OpenManus-GUI 后端** | 8002 | Agent 引擎（执行任务、调用工具） | Python + FastAPI + uvicorn |
+| **OpenManus-GUI 后端** | 8000 | Agent 引擎（执行任务、调用工具） | Python + FastAPI + uvicorn |
 
-前端通过 Vite 代理将 `/api/*` 请求转发到 `http://localhost:8002`，避免了浏览器 CORS 跨域限制。两个服务完全独立，前端只是"展示层"，不影响 Agent 的任何自动化能力。
+前端通过 Vite 代理将 `/api/*` 请求转发到 `http://localhost:8000`，避免了浏览器 CORS 跨域限制。两个服务完全独立，前端只是"展示层"，不影响 Agent 的任何自动化能力。
 
 ---
 
@@ -217,7 +217,7 @@ pnpm config set registry https://registry.npmmirror.com
 脚本会自动：
 1. 检测项目安装目录
 2. 自动检测并激活 `.venv` 或 `venv` 虚拟环境
-3. 启动后端 API 服务（端口 8002）
+3. 启动后端 API 服务（端口 8000）
 4. 启动前端开发服务器（端口 3000）
 5. 打开浏览器访问 `http://localhost:3000`
 
@@ -236,7 +236,7 @@ python api_server.py
 看到以下输出说明后端启动成功：
 
 ```
-INFO:     Uvicorn running on http://0.0.0.0:8002
+INFO:     Uvicorn running on http://0.0.0.0:8000
 INFO:     Application startup complete.
 ```
 
@@ -273,7 +273,7 @@ pnpm dev
 | 检查项 | 正常状态 | 异常时怎么办 |
 |---|---|---|
 | 右上角连接状态 | 显示绿色 **"已连接"** | 确认后端终端窗口是否正常运行 |
-| 右上角齿轮图标 | 点击可打开连接设置 | 检查后端地址和端口是否正确（默认 localhost:8002） |
+| 右上角齿轮图标 | 点击可打开连接设置 | 检查后端地址和端口是否正确（默认 localhost:8000） |
 | 左上角模型名称 | 显示 **"GPT-4.1 Mini"** 或您配置的模型 | 点击可切换模型 |
 | 输入框 | 可以正常输入文字 | 刷新页面重试 |
 
@@ -369,8 +369,8 @@ ollama pull qwen2.5:7b
 
 **排查步骤**：
 
-1. 确认后端终端窗口是否显示 `Uvicorn running on http://0.0.0.0:8002`
-2. 在浏览器中直接访问 `http://localhost:8002/v1/models`，如果返回 JSON 数据说明后端正常
+1. 确认后端终端窗口是否显示 `Uvicorn running on http://0.0.0.0:8000`
+2. 在浏览器中直接访问 `http://localhost:8000/v1/models`，如果返回 JSON 数据说明后端正常
 3. 点击右上角齿轮图标，检查连接设置中的地址和端口是否正确
 4. 如果后端正常但前端仍显示未连接，运行 CORS 补丁：`python fix_cors.py`
 
@@ -380,7 +380,7 @@ ollama pull qwen2.5:7b
 
 **解决方案**（任选其一）：
 
-1. **方案 A（已内置）**：前端已通过 Vite 代理自动解决，开发环境下 `/api/*` 请求会被代理到 `localhost:8002`
+1. **方案 A（已内置）**：前端已通过 Vite 代理自动解决，开发环境下 `/api/*` 请求会被代理到 `localhost:8000`
 2. **方案 B（备用）**：运行 `python fix_cors.py`，自动给后端添加 CORS 中间件
 
 ### 发送消息后报错
@@ -412,7 +412,7 @@ Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 
 ```powershell
 # 查看占用端口的进程
-netstat -ano | findstr :8002    # 后端端口
+netstat -ano | findstr :8000    # 后端端口
 netstat -ano | findstr :3000    # 前端端口
 
 # 根据 PID 结束进程
@@ -444,10 +444,10 @@ pnpm dev
 
 | 端点 | 方法 | 说明 |
 |---|---|---|
-| `http://localhost:8002/v1/chat/completions` | POST | 发送消息给 Agent（OpenAI 兼容格式，支持流式） |
-| `http://localhost:8002/v1/models` | GET | 获取可用模型列表 |
+| `http://localhost:8000/v1/chat/completions` | POST | 发送消息给 Agent（OpenAI 兼容格式，支持流式） |
+| `http://localhost:8000/v1/models` | GET | 获取可用模型列表 |
 | `http://localhost:3000` | — | 前端界面入口 |
-| `http://localhost:3000/api/*` | — | Vite 代理（开发环境自动转发到后端 8002） |
+| `http://localhost:3000/api/*` | — | Vite 代理（开发环境自动转发到后端 8000） |
 
 ### 文件路径速查
 
@@ -455,7 +455,7 @@ pnpm dev
 |---|---|---|
 | 后端配置 | `E:\openmanus\OpenManus-GUI\config\config.toml` | API Key、模型配置 |
 | 前端源码 | `E:\openmanus\web-ui\client\src\` | React 组件和页面 |
-| Vite 代理配置 | `E:\openmanus\web-ui\vite.config.ts` | 前端代理设置（/api → localhost:8002） |
+| Vite 代理配置 | `E:\openmanus\web-ui\vite.config.ts` | 前端代理设置（/api → localhost:8000） |
 | API 连接配置 | `E:\openmanus\web-ui\client\src\lib\api.ts` | 后端 API 地址（可在前端设置面板修改） |
 | 模型切换工具 | `E:\openmanus\switch_model.py` | 命令行模型切换 |
 | CORS 补丁 | `E:\openmanus\fix_cors.py` | 自动给后端添加 CORS 支持 |

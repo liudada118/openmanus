@@ -10,7 +10,7 @@ interface Settings {
 
 const DEFAULT_SETTINGS: Settings = {
   backendHost: "localhost",
-  backendPort: 8002,
+  backendPort: 8000,
 };
 
 export function getSettings(): Settings {

@@ -9,7 +9,7 @@ interface SettingsPanelProps {
 
 export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
   const [host, setHost] = useState("localhost");
-  const [port, setPort] = useState("8002");
+  const [port, setPort] = useState("8000");
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
@@ -84,13 +84,13 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
                 type="number"
                 value={port}
                 onChange={(e) => setPort(e.target.value)}
-                placeholder="8002"
+                placeholder="8000"
                 min={1}
                 max={65535}
                 className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary/50 transition-all"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                OpenManus-GUI 的 api_server.py 默认端口为 8002
+                OpenManus-GUI 的 api_server.py 默认端口为 8000
               </p>
             </div>
           </div>

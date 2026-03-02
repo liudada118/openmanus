@@ -1,6 +1,6 @@
 # OpenManus 本地 AI Agent 运行手册
 
-> **版本**：v2.0 | **更新日期**：2026 年 3 月 | **作者**：Manus AI
+> **版本**：v3.0 | **更新日期**：2026 年 3 月 | **作者**：Manus AI
 >
 > 本手册详细说明如何在 Windows 本地搭建并运行 OpenManus AI Agent 系统，包括后端 Agent 引擎和 React 前端界面的完整部署流程。
 
@@ -31,17 +31,18 @@
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                    您的浏览器                              │
-│              http://localhost:5173                        │
+│              http://localhost:3000                        │
 │                                                          │
 │  ┌────────────────────────────────────────────────────┐  │
 │  │           React 前端界面 (web-ui)                    │  │
 │  │  · 任务列表 · 对话界面 · 模型选择 · 状态监控         │  │
+│  │  · Vite 代理: /api → localhost:8002                  │  │
 │  └──────────────────────┬─────────────────────────────┘  │
-│                         │ HTTP API 调用                    │
+│                         │ HTTP API (通过 Vite 代理)        │
 │                         ▼                                 │
 │  ┌────────────────────────────────────────────────────┐  │
 │  │      OpenManus-GUI 后端 (api_server.py)             │  │
-│  │            http://localhost:8000                     │  │
+│  │            http://localhost:8002                     │  │
 │  │  · Agent 引擎 · 工具调用 · 浏览器自动化 · 代码执行  │  │
 │  └──────────────────────┬─────────────────────────────┘  │
 │                         │                                 │
@@ -52,10 +53,10 @@
 
 | 服务 | 端口 | 作用 | 技术栈 |
 |---|---|---|---|
-| **React 前端** | 5173 | 用户界面（对话、任务管理、模型选择） | React + TailwindCSS |
-| **OpenManus-GUI 后端** | 8000 | Agent 引擎（执行任务、调用工具） | Python + FastAPI |
+| **React 前端** | 3000 | 用户界面（对话、任务管理、模型选择） | React 19 + TailwindCSS 4 + shadcn/ui |
+| **OpenManus-GUI 后端** | 8002 | Agent 引擎（执行任务、调用工具） | Python + FastAPI + uvicorn |
 
-前端通过 `http://localhost:8000/v1/chat/completions`（OpenAI 兼容格式）与后端通信。两个服务完全独立，前端只是"展示层"，不影响 Agent 的任何自动化能力。
+前端通过 Vite 代理将 `/api/*` 请求转发到 `http://localhost:8002`，避免了浏览器 CORS 跨域限制。两个服务完全独立，前端只是"展示层"，不影响 Agent 的任何自动化能力。
 
 ---
 
@@ -65,7 +66,7 @@
 
 | 软件 | 最低版本 | 用途 | 下载地址 |
 |---|---|---|---|
-| **Python** | 3.11+ | 运行后端 Agent | [python.org/downloads](https://www.python.org/downloads/) |
+| **Python** | 3.10+ | 运行后端 Agent | [python.org/downloads](https://www.python.org/downloads/) |
 | **Node.js** | 18+ | 运行前端界面 | [nodejs.org](https://nodejs.org/) |
 | **Git** | 任意 | 获取项目代码 | [git-scm.com](https://git-scm.com/) |
 | **pnpm** | 8+ | 前端包管理器 | 安装 Node.js 后运行 `npm install -g pnpm` |
@@ -76,33 +77,37 @@
 
 ## 3. 第一步：获取项目文件
 
-打开 PowerShell 或命令提示符，执行以下命令将项目克隆到 `E:\OpenManus`：
+打开 PowerShell 或命令提示符，执行以下命令：
 
 ```powershell
 cd E:\
-git clone https://github.com/liudada118/openmanus.git OpenManus
-cd E:\OpenManus
+git clone https://github.com/liudada118/openmanus.git openmanus
+cd E:\openmanus
 ```
 
 如果您已经有项目文件，只需拉取最新版本：
 
 ```powershell
-cd E:\OpenManus
+cd E:\openmanus
 git pull origin main
 ```
 
-也可以从 GitHub 页面直接下载 ZIP：打开 [github.com/liudada118/openmanus](https://github.com/liudada118/openmanus) → 点击绿色 **Code** 按钮 → **Download ZIP** → 解压到 `E:\OpenManus`。
+也可以从 GitHub 页面直接下载 ZIP：打开 [github.com/liudada118/openmanus](https://github.com/liudada118/openmanus) → 点击绿色 **Code** 按钮 → **Download ZIP** → 解压到 `E:\openmanus`。
 
 克隆完成后，目录结构如下：
 
 ```
-E:\OpenManus\
+E:\openmanus\
 ├── web-ui\                      ← React 前端界面源码
 │   ├── client\src\              ← 前端组件和页面
+│   ├── vite.config.ts           ← Vite 配置（含代理设置）
 │   ├── package.json             ← 前端依赖配置
 │   └── ...
-├── install_webui_windows.ps1    ← 后端一键安装脚本
+├── fix_cors.py                  ← 后端 CORS 补丁（备用方案）
+├── check_deps.py                ← 依赖检查工具
 ├── switch_model.py              ← 模型切换工具
+├── 启动全部.bat                  ← 一键启动脚本
+├── 停止全部.bat                  ← 一键停止脚本
 ├── RUNBOOK.md                   ← 本文档
 ├── 中文使用说明.md
 └── ARCHITECTURE.md
@@ -112,53 +117,45 @@ E:\OpenManus\
 
 ## 4. 第二步：安装后端（OpenManus-GUI）
 
-### 方式 A：一键安装（推荐）
-
-1. 进入 `E:\OpenManus` 目录
-2. 找到 `install_webui_windows.ps1` 文件
-3. **右键点击** → **"使用 PowerShell 运行"**
-
-脚本会自动完成以下操作：
-
-- 克隆 OpenManus-GUI 到 `E:\OpenManus\OpenManus-GUI`
-- 创建 Python 虚拟环境并安装所有依赖
-- 安装浏览器自动化工具
-- 引导您配置 API Key 和默认模型
-- 生成启动脚本
-
-如果 PowerShell 提示"无法运行脚本"，请先执行：
+### 4.1 克隆 OpenManus-GUI
 
 ```powershell
-Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+cd E:\openmanus
+git clone https://github.com/Hank-Chromela/OpenManus-GUI.git
 ```
 
-### 方式 B：手动安装
+### 4.2 安装 Python 依赖
 
 ```powershell
-# 1. 克隆 OpenManus-GUI
-cd E:\OpenManus
-git clone https://github.com/Hank-Chromela/OpenManus-GUI.git
-
-# 2. 进入目录并创建虚拟环境
-cd OpenManus-GUI
-python -m venv venv
-.\venv\Scripts\Activate.ps1
-
-# 3. 安装依赖
+cd E:\openmanus\OpenManus-GUI
 pip install -r requirements.txt
+```
 
-# 4. 安装浏览器自动化工具
+> **提示**：不需要创建虚拟环境，直接使用系统 Python 安装即可。如果安装速度慢，可以使用国内镜像：
+> ```powershell
+> pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+> ```
+
+### 4.3 安装浏览器自动化工具（可选）
+
+```powershell
 playwright install chromium
+```
 
-# 5. 复制配置文件
-copy config\config.example.toml config\config.toml
+### 4.4 使用依赖检查工具
+
+项目提供了自动检查工具，可以一键检测所有依赖是否安装正确：
+
+```powershell
+cd E:\openmanus
+python check_deps.py
 ```
 
 ---
 
 ## 5. 第三步：配置 API Key 和模型
 
-用文本编辑器（记事本即可）打开 `E:\OpenManus\OpenManus-GUI\config\config.toml`，填入您的 API Key：
+用文本编辑器（记事本即可）打开 `E:\openmanus\OpenManus-GUI\config\config.toml`，填入您的 API Key：
 
 ```toml
 [llm]
@@ -189,7 +186,7 @@ temperature = 0.0
 npm install -g pnpm
 
 # 2. 进入前端目录
-cd E:\OpenManus\web-ui
+cd E:\openmanus\web-ui
 
 # 3. 安装前端依赖（大约 1~3 分钟）
 pnpm install
@@ -205,31 +202,42 @@ pnpm config set registry https://registry.npmmirror.com
 
 ## 7. 第五步：启动系统
 
+### 方式 A：一键启动（推荐）
+
+双击 `E:\openmanus\启动全部.bat` 即可自动启动后端和前端，并打开浏览器。
+
+脚本会自动：
+1. 检测项目安装目录
+2. 启动后端 API 服务（端口 8002）
+3. 启动前端开发服务器（端口 3000）
+4. 打开浏览器访问 `http://localhost:3000`
+
+### 方式 B：手动启动
+
 **需要同时打开两个终端窗口**，分别启动后端和前端。顺序很重要：**先启动后端，再启动前端**。
 
-### 终端 1：启动后端 API 服务
+**终端 1：启动后端 API 服务**
 
 ```powershell
-cd E:\OpenManus\OpenManus-GUI
-.\venv\Scripts\Activate.ps1
+cd E:\openmanus\OpenManus-GUI
 python api_server.py
 ```
 
 看到以下输出说明后端启动成功：
 
 ```
-INFO:     Uvicorn running on http://0.0.0.0:8000
+INFO:     Uvicorn running on http://0.0.0.0:8002
 INFO:     Application startup complete.
 ```
 
 > **注意**：这个终端窗口不要关闭，后端需要持续运行。
 
-### 终端 2：启动前端界面
+**终端 2：启动前端界面**
 
 打开**另一个** PowerShell 窗口：
 
 ```powershell
-cd E:\OpenManus\web-ui
+cd E:\openmanus\web-ui
 pnpm dev
 ```
 
@@ -238,13 +246,13 @@ pnpm dev
 ```
   VITE v7.x.x  ready in xxx ms
 
-  ➜  Local:   http://localhost:5173/
-  ➜  Network: http://192.168.x.x:5173/
+  ➜  Local:   http://localhost:3000/
+  ➜  Network: http://192.168.x.x:3000/
 ```
 
 ### 打开浏览器
 
-在浏览器地址栏输入 **http://localhost:5173** 并回车，即可看到 Manus 风格的 AI Agent 界面。
+在浏览器地址栏输入 **http://localhost:3000** 并回车，即可看到 Manus 风格的 AI Agent 界面。
 
 ---
 
@@ -255,6 +263,7 @@ pnpm dev
 | 检查项 | 正常状态 | 异常时怎么办 |
 |---|---|---|
 | 右上角连接状态 | 显示绿色 **"已连接"** | 确认后端终端窗口是否正常运行 |
+| 右上角齿轮图标 | 点击可打开连接设置 | 检查后端地址和端口是否正确（默认 localhost:8002） |
 | 左上角模型名称 | 显示 **"GPT-4.1 Mini"** 或您配置的模型 | 点击可切换模型 |
 | 输入框 | 可以正常输入文字 | 刷新页面重试 |
 
@@ -266,72 +275,25 @@ pnpm dev
 
 每次使用时，只需要两步：
 
-### 快速启动命令
+### 快速启动
 
-**终端 1（后端）**：
+**方式 1**：双击 `启动全部.bat`（推荐）
 
-```powershell
-cd E:\OpenManus\OpenManus-GUI && .\venv\Scripts\Activate.ps1 && python api_server.py
-```
-
-**终端 2（前端）**：
+**方式 2**：手动启动
 
 ```powershell
-cd E:\OpenManus\web-ui && pnpm dev
+# 终端 1（后端）
+cd E:\openmanus\OpenManus-GUI && python api_server.py
+
+# 终端 2（前端）
+cd E:\openmanus\web-ui && pnpm dev
 ```
 
-然后打开浏览器访问 `http://localhost:5173` 即可。
+然后打开浏览器访问 `http://localhost:3000` 即可。
 
-### 一键启动脚本（推荐）
+### 停止服务
 
-将以下内容保存为 `E:\OpenManus\启动全部.bat`，以后双击即可一键启动：
-
-```bat
-@echo off
-chcp 65001 >nul
-echo ========================================
-echo   OpenManus AI Agent 启动中...
-echo ========================================
-echo.
-
-echo [1/2] 启动后端 API 服务...
-start "OpenManus-Backend" cmd /k "cd /d E:\OpenManus\OpenManus-GUI && .\venv\Scripts\activate && python api_server.py"
-
-echo 等待后端启动...
-timeout /t 5 /nobreak >nul
-
-echo [2/2] 启动前端界面...
-start "OpenManus-Frontend" cmd /k "cd /d E:\OpenManus\web-ui && pnpm dev"
-
-echo 等待前端启动...
-timeout /t 8 /nobreak >nul
-
-echo.
-echo ========================================
-echo   启动完成！正在打开浏览器...
-echo ========================================
-start http://localhost:5173
-
-echo.
-echo 提示：
-echo   - 关闭此窗口不会影响已启动的服务
-echo   - 要停止服务，请关闭 "OpenManus-Backend" 和 "OpenManus-Frontend" 两个黑色窗口
-pause
-```
-
-### 一键停止脚本（可选）
-
-将以下内容保存为 `E:\OpenManus\停止全部.bat`：
-
-```bat
-@echo off
-chcp 65001 >nul
-echo 正在停止所有 OpenManus 服务...
-taskkill /FI "WINDOWTITLE eq OpenManus-Backend" /F >nul 2>&1
-taskkill /FI "WINDOWTITLE eq OpenManus-Frontend" /F >nul 2>&1
-echo 所有服务已停止。
-pause
-```
+双击 `停止全部.bat`，或手动在各终端窗口按 `Ctrl+C`。
 
 ---
 
@@ -357,8 +319,8 @@ pause
 ### 方法 2：通过命令行切换（推荐）
 
 ```powershell
-cd E:\OpenManus\OpenManus-GUI
-python E:\OpenManus\switch_model.py
+cd E:\openmanus
+python switch_model.py
 ```
 
 按照提示选择模型编号即可。切换后需要**重启后端服务**才能生效（关闭后端终端窗口，重新启动）。
@@ -397,13 +359,21 @@ ollama pull qwen2.5:7b
 
 **排查步骤**：
 
-1. 确认后端终端窗口是否显示 `Uvicorn running on http://0.0.0.0:8000`
-2. 在浏览器中直接访问 `http://localhost:8000/v1/models`，如果返回 JSON 数据说明后端正常
-3. 如果后端正常但前端仍显示未连接，可能是浏览器 CORS 限制，尝试用 Chrome 无痕模式打开
+1. 确认后端终端窗口是否显示 `Uvicorn running on http://0.0.0.0:8002`
+2. 在浏览器中直接访问 `http://localhost:8002/v1/models`，如果返回 JSON 数据说明后端正常
+3. 点击右上角齿轮图标，检查连接设置中的地址和端口是否正确
+4. 如果后端正常但前端仍显示未连接，运行 CORS 补丁：`python fix_cors.py`
+
+### CORS 跨域错误
+
+**原因**：浏览器阻止了前端直接请求后端 API。
+
+**解决方案**（任选其一）：
+
+1. **方案 A（已内置）**：前端已通过 Vite 代理自动解决，开发环境下 `/api/*` 请求会被代理到 `localhost:8002`
+2. **方案 B（备用）**：运行 `python fix_cors.py`，自动给后端添加 CORS 中间件
 
 ### 发送消息后报错
-
-**可能原因及解决方法**：
 
 | 错误信息 | 原因 | 解决方法 |
 |---|---|---|
@@ -432,8 +402,8 @@ Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 
 ```powershell
 # 查看占用端口的进程
-netstat -ano | findstr :8000    # 后端端口
-netstat -ano | findstr :5173    # 前端端口
+netstat -ano | findstr :8002    # 后端端口
+netstat -ano | findstr :3000    # 前端端口
 
 # 根据 PID 结束进程
 taskkill /PID <进程ID> /F
@@ -442,7 +412,7 @@ taskkill /PID <进程ID> /F
 ### 前端页面空白
 
 ```powershell
-cd E:\OpenManus\web-ui
+cd E:\openmanus\web-ui
 rmdir /s /q node_modules
 pnpm install
 pnpm dev
@@ -456,27 +426,40 @@ pnpm dev
 
 | 服务 | 默认端口 | 启动命令 | 停止方式 |
 |---|---|---|---|
-| OpenManus-GUI 后端 | 8000 | `python api_server.py` | 终端按 `Ctrl+C` |
-| React 前端 | 5173 | `pnpm dev` | 终端按 `Ctrl+C` |
+| OpenManus-GUI 后端 | 8002 | `python api_server.py` | 终端按 `Ctrl+C` |
+| React 前端 | 3000 | `pnpm dev` | 终端按 `Ctrl+C` |
 | Ollama（可选） | 11434 | `ollama serve` | 终端按 `Ctrl+C` |
 
 ### API 端点参考
 
 | 端点 | 方法 | 说明 |
 |---|---|---|
-| `http://localhost:8000/v1/chat/completions` | POST | 发送消息给 Agent（OpenAI 兼容格式，支持流式） |
-| `http://localhost:8000/v1/models` | GET | 获取可用模型列表 |
-| `http://localhost:5173` | — | 前端界面入口 |
+| `http://localhost:8002/v1/chat/completions` | POST | 发送消息给 Agent（OpenAI 兼容格式，支持流式） |
+| `http://localhost:8002/v1/models` | GET | 获取可用模型列表 |
+| `http://localhost:3000` | — | 前端界面入口 |
+| `http://localhost:3000/api/*` | — | Vite 代理（开发环境自动转发到后端 8002） |
 
 ### 文件路径速查
 
 | 文件 | 路径 | 用途 |
 |---|---|---|
-| 后端配置 | `E:\OpenManus\OpenManus-GUI\config\config.toml` | API Key、模型配置 |
-| 前端源码 | `E:\OpenManus\web-ui\client\src\` | React 组件和页面 |
-| API 连接配置 | `E:\OpenManus\web-ui\client\src\lib\api.ts` | 后端 API 地址（默认 localhost:8000） |
-| 模型切换工具 | `E:\OpenManus\switch_model.py` | 命令行模型切换 |
-| 一键启动 | `E:\OpenManus\启动全部.bat` | 一键启动前后端（需自行创建） |
+| 后端配置 | `E:\openmanus\OpenManus-GUI\config\config.toml` | API Key、模型配置 |
+| 前端源码 | `E:\openmanus\web-ui\client\src\` | React 组件和页面 |
+| Vite 代理配置 | `E:\openmanus\web-ui\vite.config.ts` | 前端代理设置（/api → localhost:8002） |
+| API 连接配置 | `E:\openmanus\web-ui\client\src\lib\api.ts` | 后端 API 地址（可在前端设置面板修改） |
+| 模型切换工具 | `E:\openmanus\switch_model.py` | 命令行模型切换 |
+| CORS 补丁 | `E:\openmanus\fix_cors.py` | 自动给后端添加 CORS 支持 |
+| 依赖检查 | `E:\openmanus\check_deps.py` | 自动检测所有依赖是否安装 |
+| 一键启动 | `E:\openmanus\启动全部.bat` | 一键启动前后端 |
+| 一键停止 | `E:\openmanus\停止全部.bat` | 一键停止所有服务 |
+
+### 工具脚本说明
+
+| 脚本 | 用途 | 使用方法 |
+|---|---|---|
+| `check_deps.py` | 检查 Python、Node.js、pnpm 和所有依赖是否安装 | `python check_deps.py` |
+| `fix_cors.py` | 自动给后端 api_server.py 添加 CORS 中间件 | `python fix_cors.py` |
+| `switch_model.py` | 交互式切换 LLM 模型（支持 8 种预设） | `python switch_model.py` |
 
 ---
 

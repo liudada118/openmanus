@@ -1,7 +1,44 @@
 // OpenManus-GUI api_server.py 兼容的 OpenAI 格式 API 客户端
-// 默认连接 http://localhost:8000（OpenManus-GUI 的 api_server.py）
+// 支持通过 Vite 代理（开发环境）或直连后端（生产环境）
 
-const API_BASE = "http://localhost:8000";
+const SETTINGS_KEY = "openmanus_settings";
+
+interface Settings {
+  backendHost: string;
+  backendPort: number;
+}
+
+const DEFAULT_SETTINGS: Settings = {
+  backendHost: "localhost",
+  backendPort: 8002,
+};
+
+export function getSettings(): Settings {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return { ...DEFAULT_SETTINGS, ...parsed };
+    }
+  } catch {
+    // ignore
+  }
+  return DEFAULT_SETTINGS;
+}
+
+export function saveSettings(settings: Settings) {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+}
+
+function getApiBase(): string {
+  const settings = getSettings();
+  // 开发环境通过 Vite 代理，避免 CORS
+  if (import.meta.env.DEV) {
+    return "/api";
+  }
+  // 生产环境直连后端
+  return `http://${settings.backendHost}:${settings.backendPort}`;
+}
 
 interface ChatCompletionRequest {
   model: string;
@@ -14,7 +51,8 @@ export async function sendChatMessage(
   onChunk?: (text: string) => void,
   signal?: AbortSignal
 ): Promise<string> {
-  const response = await fetch(`${API_BASE}/v1/chat/completions`, {
+  const apiBase = getApiBase();
+  const response = await fetch(`${apiBase}/v1/chat/completions`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ...request, stream: true }),
@@ -67,7 +105,8 @@ export async function sendChatMessage(
 export async function sendChatMessageSync(
   request: ChatCompletionRequest
 ): Promise<string> {
-  const response = await fetch(`${API_BASE}/v1/chat/completions`, {
+  const apiBase = getApiBase();
+  const response = await fetch(`${apiBase}/v1/chat/completions`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ...request, stream: false }),
@@ -84,7 +123,8 @@ export async function sendChatMessageSync(
 // 健康检查
 export async function checkApiHealth(): Promise<boolean> {
   try {
-    const response = await fetch(`${API_BASE}/v1/models`, {
+    const apiBase = getApiBase();
+    const response = await fetch(`${apiBase}/v1/models`, {
       method: "GET",
       signal: AbortSignal.timeout(3000),
     });

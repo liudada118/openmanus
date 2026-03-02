@@ -18,7 +18,7 @@ if exist "%OPENMANUS_DIR%\main.py" (
     cd /d "%OPENMANUS_DIR%"
     goto :found
 )
-set "OPENMANUS_DIR=D:\OpenManus"
+set "OPENMANUS_DIR=E:\OpenManus"
 if exist "%OPENMANUS_DIR%\main.py" (
     cd /d "%OPENMANUS_DIR%"
     goto :found

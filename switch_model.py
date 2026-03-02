@@ -78,6 +78,8 @@ def find_config() -> Path:
         Path(__file__).parent / "config" / "config.toml",
         Path.cwd() / "config" / "config.toml",
         Path.home() / "OpenManus" / "config" / "config.toml",
+        Path("E:/OpenManus") / "config" / "config.toml",
+        Path("E:/OpenManus/OpenManusWeb") / "config" / "config.toml",
     ]
     for p in candidates:
         if p.exists():

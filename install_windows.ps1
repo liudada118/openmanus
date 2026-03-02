@@ -69,7 +69,7 @@ try {
 # ============================================================
 # 3. 克隆 OpenManus
 # ============================================================
-$installDir = "$env:USERPROFILE\OpenManus"
+$installDir = "E:\OpenManus"
 Write-Step "克隆 OpenManus 到 $installDir ..."
 
 if (Test-Path "$installDir\.git") {

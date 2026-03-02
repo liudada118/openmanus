@@ -13,7 +13,7 @@ Write-Host "============================================================" -Foreg
 Write-Host ""
 
 # --- 配置 ---
-$INSTALL_DIR = "$env:USERPROFILE\OpenManusWeb"
+$INSTALL_DIR = "E:\OpenManus\OpenManusWeb"
 $REPO_URL = "https://github.com/YunQiAI/OpenManusWeb.git"
 $BRANCH = "dev_web_app"
 

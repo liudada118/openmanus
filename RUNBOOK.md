@@ -1,6 +1,6 @@
 # OpenManus 本地 AI Agent 运行手册
 
-> **版本**：v3.0 | **更新日期**：2026 年 3 月 | **作者**：Manus AI
+> **版本**：v3.4 | **更新日期**：2026 年 3 月 | **作者**：Manus AI
 >
 > 本手册详细说明如何在 Windows 本地搭建并运行 OpenManus AI Agent 系统，包括后端 Agent 引擎和 React 前端界面的完整部署流程。
 
